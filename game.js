@@ -1574,17 +1574,32 @@ function renderSettings() {
 
 renderMenu = function() {
   app.innerHTML = cls`
-    <section class="screen hero">
+    <section class="screen hero console-home">
       ${speedLines()}
-      <div class="top-pill solo"><span>RP ${state.career.credits}</span></div>
+      <div class="home-status">
+        <div class="profile-stack"><span>PRINCIPAL</span><b>${userProfile.username}</b></div>
+        <div class="rp-stack"><span>RESOURCE POINTS</span><b>RP ${state.career.credits}</b></div>
+      </div>
       <div class="title-block">
         <div class="logo-mark"></div>
         <h1>Apex<br>Strategy</h1>
       </div>
+      <div class="home-feature">
+        <div>
+          <span class="feature-kicker">Season Control</span>
+          <h2>Race strategy, team politics, development calls.</h2>
+          <p>Manage two drivers through compressed Grand Prix battles with tire rules, pit gambles, interviews, standings and contracts.</p>
+        </div>
+        <div class="feature-meta">
+          <span>10 / 20 LAP RACES</span>
+          <span>LIVE WEATHER</span>
+          <span>TEAM ORDERS</span>
+        </div>
+      </div>
       <div class="menu-grid">
-        <button class="primary-btn career-btn" onclick="go('career')">Career</button>
-        <button class="secondary-btn" onclick="quickRace(10, 'grandPrix')">Grand Prix</button>
-        <button class="ghost-btn" onclick="go('settings')">Settings</button>
+        <button class="primary-btn career-btn menu-tile" onclick="go('career')"><span>Career</span><small>Continue the championship</small></button>
+        <button class="secondary-btn menu-tile" onclick="quickRace(10, 'grandPrix')"><span>Grand Prix</span><small>Choose any team and venue</small></button>
+        <button class="ghost-btn menu-tile" onclick="go('settings')"><span>Settings</span><small>Profile and display</small></button>
       </div>
     </section>`;
 }
