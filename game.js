@@ -145,7 +145,7 @@ function defaultCareer() {
     car: 62, pit: 60, tire: 58, strategy: 61, reliability: 64,
     engine: 60, frontWing: 58, floor: 57, brakeCooling: 56,
     signedDrivers: null, releasedFrom: "", driverGrowth: {}, lastGrowthRound: 0,
-    offseasonOffers: null, offseasonStatus: ""
+    offseasonOffers: null, offseasonStatus: "", academyDrivers: []
   };
 }
 function loadCareer() {
@@ -168,7 +168,9 @@ function applySavedDriverGrowth() {
   }));
 }
 function allDrivers() {
-  return f1Teams.flatMap(team => team.drivers.map(driver => ({ ...driver, teamName: team.name, teamTag: team.tag })));
+  const gridDrivers = f1Teams.flatMap(team => team.drivers.map(driver => ({ ...driver, teamName: team.name, teamTag: team.tag })));
+  const academyDrivers = (state.career.academyDrivers || []).map(driver => ({ ...driver, teamName: "Academy", teamTag: "ACD" }));
+  return [...gridDrivers, ...academyDrivers];
 }
 function findDriver(abbr) {
   return allDrivers().find(driver => driver.abbr === abbr) || playerTeam.drivers[0];
@@ -586,6 +588,7 @@ function startRace(custom = {}) {
     ],
     weatherAlert: "", previousWeather: weatherPlan[1],
     commands: { 1: "Balanced", 2: "Balanced" },
+    teamOrder: "Free",
     pitModal: null, safetyLap: buildSafetyLap(setup, custom), safetyActive: false, lastSummary: [],
     interviewDone: false, interviewNote: ""
   };
@@ -608,7 +611,7 @@ function makeCar(abbr, name, player, driverNum, startPos, tire, team = null, dri
     abbr, name, player, driverNum, team, driver, position: startPos, start: startPos, tire, tireAge: 0,
     wear: tire === "Soft" ? 8 : tire === "Medium" ? 5 : 3, mode: "Balanced", pitQueued: false, stops: 0,
     pitTarget: tire, usedCompounds: [tire], rulePenalty: 0, lastLap: 0, total: startPos * .72, risk: "Low", progress: rand(startPos + 4),
-    form: 0, dnf: false, dnfReason: ""
+    form: 0, dnf: false, dnfReason: "", wingDamage: false, incidentNote: ""
   };
 }
 
@@ -719,6 +722,18 @@ function pitRecommendation(car) {
 
 function setCommand(num, cmd) {
   state.race.commands[num] = cmd === "Push" ? "Balanced" : cmd;
+  render();
+}
+function setTeamOrder(order) {
+  if (!state.race) return;
+  state.race.teamOrder = order;
+  const labels = {
+    Free: "Free race",
+    Hold: "Hold station",
+    Swap: "Swap cars",
+    BackLead: "Back the lead driver"
+  };
+  state.race.feed.push(`<strong>Team order:</strong> ${labels[order] || order}.`);
   render();
 }
 function openPit(num) { state.race.pitModal = num; render(); }
@@ -842,6 +857,7 @@ function simulateLap() {
     .filter(Boolean);
   r.cars.forEach((car, idx) => runCarLap(car, events));
   sortCars();
+  applyTeamOrders(events);
   defendedPairs.forEach(({ defender, threat }) => {
     if (!defender.pitQueued && defender.position > threat.position && Math.abs(defender.total - threat.total) < 1.4) {
       defender.total = threat.total - .03;
@@ -869,6 +885,33 @@ function simulateLap() {
   }
 }
 
+function applyTeamOrders(events) {
+  const r = state.race;
+  const players = r.cars.filter(c => c.player && !c.dnf).sort((a, b) => a.position - b.position);
+  if (players.length < 2) return;
+  const [lead, chase] = players;
+  const gap = Math.abs(lead.total - chase.total);
+  if (r.teamOrder === "Swap" && gap < 2.8) {
+    const buffer = .04;
+    const oldLead = lead.abbr;
+    chase.total = lead.total - buffer;
+    lead.total = chase.total + buffer;
+    r.teamOrder = "Free";
+    sortCars();
+    events.push(`<strong>Team orders:</strong> ${chase.abbr} swapped ahead of ${oldLead}.`);
+  } else if (r.teamOrder === "Hold" && gap < 1.4) {
+    chase.total += .22;
+    events.push(`<strong>Team orders:</strong> drivers held station.`);
+  } else if (r.teamOrder === "BackLead") {
+    const nearestRival = r.cars.find(c => !c.player && !c.dnf && c.position === chase.position + 1);
+    if (nearestRival && Math.abs(chase.total - nearestRival.total) < 2.2) {
+      nearestRival.total += .28;
+      chase.total += .18;
+      events.push(`<strong>${chase.abbr}</strong> backed the lead car by managing the pack.`);
+    }
+  }
+}
+
 function runCarLap(car, events) {
   if (car.dnf) {
     car.lastLap = 0;
@@ -876,6 +919,10 @@ function runCarLap(car, events) {
   }
   const r = state.race;
   let cmd = car.mode === "Push" ? "Balanced" : car.mode;
+  const teammate = car.player ? state.race.cars.find(c => c.player && c !== car) : null;
+  const teammateGap = teammate ? Math.abs(car.total - teammate.total) : 99;
+  if (car.player && state.race.teamOrder === "Hold" && teammateGap < 1.2 && cmd === "Attack") cmd = "Balanced";
+  if (car.player && state.race.teamOrder === "BackLead" && teammate && car.position > teammate.position && teammateGap < 3.2) cmd = "Defend";
   const stat = car.driver?.stats || (car.player ? playerDrivers[car.driverNum - 1].stats : null);
   const carPackage = car.player
     ? (playerTeam.strength * .45 + state.career.car * .2 + state.career.engine * .18 + state.career.frontWing * .1 + state.career.floor * .07)
@@ -889,6 +936,7 @@ function runCarLap(car, events) {
   lap += wearPenalty;
   if (cmd === "Attack") lap -= .54;
   if (cmd === "Conserve") lap += .42;
+  if (car.wingDamage) lap += .42;
   if (cmd === "Defend") {
     lap += .06;
     if (closeThreat && !car.pitQueued) {
@@ -916,7 +964,16 @@ function runCarLap(car, events) {
     const stop = effectivePitLoss() + pitVariance(car);
     lap += stop;
     events.push(`<strong>${car.name}</strong> pit stop: ${stop.toFixed(1)}s, ${car.pitTarget}s fitted.`);
+    const pitIncident = pitLaneIncident(car);
+    if (pitIncident) {
+      lap += pitIncident.loss;
+      events.push(`<strong>${car.abbr}</strong> ${pitIncident.text}`);
+    }
     car.tire = car.pitTarget; car.usedCompounds.push(car.tire); car.wear = car.tire === "Soft" ? 2 : 1; car.tireAge = 0; car.pitQueued = false; car.stops++;
+    if (car.wingDamage && Math.random() < .7) {
+      car.wingDamage = false;
+      events.push(`<strong>${car.abbr}</strong> repaired front wing damage.`);
+    }
   }
 
   const reliability = car.player ? (state.career.reliability * .82 + state.career.brakeCooling * .18) : car.team.strength - 8;
@@ -924,10 +981,36 @@ function runCarLap(car, events) {
   if (Math.random() < clamp(mistakeRisk, 0, .16)) {
     const loss = .6 + Math.random() * 1.4;
     lap += loss;
-    if (car.player) events.push(`<strong>${car.name}</strong> lost ${loss.toFixed(1)}s after a lock-up.`);
+    if (Math.random() < .26 && !car.wingDamage) {
+      car.wingDamage = true;
+      car.incidentNote = "Front wing damage";
+      lap += .9;
+      events.push(`<strong>${car.name}</strong> picked up front wing damage after contact.`);
+    } else if (car.player || Math.random() < .45) {
+      events.push(`<strong>${car.name}</strong> lost ${loss.toFixed(1)}s after a lock-up.`);
+    }
+  }
+  const smallIncidentRisk = (cmd === "Attack" ? .014 : .004) + Math.max(0, car.wear - 75) / 5000 + state.race.track.safety / 9000;
+  if (!car.wingDamage && Math.random() < smallIncidentRisk) {
+    car.wingDamage = true;
+    lap += .65;
+    events.push(`<strong>${car.abbr}</strong> has minor wing damage.`);
   }
   car.lastLap = lap;
   car.total += lap;
+}
+
+function pitLaneIncident(car) {
+  const r = state.race;
+  const pitSkill = car.player ? state.career.pit : (car.team?.strength || 72) - 10;
+  const trafficRisk = r.cars.filter(other => other !== car && other.pitQueued).length * .035;
+  const roll = Math.random();
+  if (roll < trafficRisk) return { loss: .55 + Math.random() * .7, text: "lost time in pit lane traffic." };
+  if (roll > .988 - Math.max(0, 78 - pitSkill) / 2600) {
+    car.rulePenalty = (car.rulePenalty || 0) + 5;
+    return { loss: 5, text: "unsafe release penalty: +5s." };
+  }
+  return null;
 }
 
 function maybeDnf(car, events) {
@@ -1144,6 +1227,8 @@ function prepareSeasonContracts(driverLeader, constructorLeader, bonus) {
       teamIndex: selectedTeamIndex,
       headline: "Renew Current Deal",
       detail: `${playerTeam.name} want to keep you for another season.`,
+      demand: contractDemand(playerTeam),
+      boardGoal: boardGoal(playerTeam),
       keep: true
     });
   }
@@ -1155,8 +1240,10 @@ function prepareSeasonContracts(driverLeader, constructorLeader, bonus) {
     .forEach(({ team, index }) => {
       offers.push({
         teamIndex: index,
-        headline: team.strength >= playerTeam.strength ? "Open Negotiation" : "Project Offer",
+        headline: team.strength >= playerTeam.strength ? "Rival Offer" : "Project Offer",
         detail: `${team.name} are willing to talk after your ${seasonPoints}-point season.`,
+        demand: contractDemand(team),
+        boardGoal: boardGoal(team),
         keep: false
       });
     });
@@ -1165,13 +1252,50 @@ function prepareSeasonContracts(driverLeader, constructorLeader, bonus) {
       teamIndex: selectedTeamIndex,
       headline: "Stay Put",
       detail: `${playerTeam.name} remain your only realistic option right now.`,
+      demand: contractDemand(playerTeam),
+      boardGoal: boardGoal(playerTeam),
       keep: true
     });
   }
+  state.career.academyOffer = makeAcademyProspect();
   state.career.offseasonOffers = offers;
   state.career.offseasonStatus = bonus
     ? `Season complete. Championship bonus secured: ${bonus} RP.`
     : "Season complete. No championship bonus secured.";
+}
+
+function contractDemand(team) {
+  const expectation = teamExpectation(team);
+  const patience = team.strength >= 88 ? "low" : team.strength >= 80 ? "medium" : "high";
+  return `${expectation.points * tracks.length}+ pts next season, patience ${patience}`;
+}
+
+function boardGoal(team) {
+  if (team.strength >= 88) return "Win races and fight for WCC";
+  if (team.strength >= 80) return "Lead the midfield and score regularly";
+  if (team.strength >= 74) return "Reach Q3 moments and convert chaos";
+  return "Build reliability, finish races, find points";
+}
+
+function makeAcademyProspect() {
+  const first = ["Rafael", "Noah", "Mika", "Theo", "Dante", "Kai", "Nico", "Leo"];
+  const last = ["Vega", "Moreau", "Keller", "Ishikawa", "Novak", "Silva", "Ward", "Rossi"];
+  const seed = Date.now() + (state.career.seasonPlayerPoints || 0);
+  const rating = clamp(70 + Math.floor(rand(seed) * 10) + Math.floor((state.career.rep || 0) / 6), 70, 84);
+  const name = `${pick(first, seed)} ${pick(last, seed + 9)}`;
+  const abbr = name.split(" ").map(part => part[0]).join("").slice(0, 3).toUpperCase() + String(seed).slice(-1);
+  return {
+    name, abbr,
+    stats: {
+      Pace: rating + 1,
+      Tire: rating,
+      Overtaking: rating + 2,
+      Defending: rating - 1,
+      Wet: rating - 2,
+      Consistency: rating - 3,
+      Start: rating + 1
+    }
+  };
 }
 
 function championshipDriverRows() {
@@ -1477,6 +1601,7 @@ function teamOptionCard(team, index, mode = "choose") {
 
 function renderSeasonContracts() {
   const offers = state.career.offseasonOffers || [];
+  const academy = state.career.academyOffer;
   app.innerHTML = cls`<section class="screen">
     <div class="header-row"><button class="back text-back" onclick="go('career')">Back</button><h2>Season Contracts</h2><span class="badge">Season End</span></div>
     <div class="career-card">
@@ -1487,6 +1612,17 @@ function renderSeasonContracts() {
     <div class="team-list">
       ${offers.map(offer => contractOfferCard(offer)).join("")}
     </div>
+    ${academy ? `<div class="section-title">Driver Academy</div>
+    <div class="driver-market-card academy-card">
+      <div class="driver-market-head">
+        <div class="driver-market-main"><div><b>${academy.name}</b><small>${academy.abbr} - Rating ${driverRating(academy)} - Academy prospect</small></div></div>
+        <span class="badge">Rookie</span>
+      </div>
+      <div class="mini-driver-stats">
+        <span>PAC<br>${academy.stats.Pace}</span><span>FOC<br>${academy.stats.Consistency}</span><span>OVR<br>${academy.stats.Overtaking}</span><span>DEF<br>${academy.stats.Defending}</span>
+      </div>
+      <div class="market-actions"><button class="secondary-btn" onclick="promoteAcademyDriver()">Promote To Market</button></div>
+    </div>` : ""}
   </section>`;
 }
 
@@ -1498,10 +1634,23 @@ function contractOfferCard(offer) {
       <span class="badge">${team.tag}</span>
     </div>
     <div class="feed-line">${offer.detail}</div>
+    <div class="contract-meta"><span>Demand: ${offer.demand}</span><span>Board: ${offer.boardGoal}</span></div>
     <div class="market-actions">
       <button class="primary-btn" onclick="acceptSeasonContract(${offer.teamIndex})">${offer.keep ? "Stay" : "Negotiate"}</button>
     </div>
   </div>`;
+}
+
+function promoteAcademyDriver() {
+  const academy = state.career.academyOffer;
+  if (!academy) return;
+  state.career.academyDrivers = [...(state.career.academyDrivers || []), academy];
+  state.career.signedDrivers = [...new Set([...(state.career.signedDrivers || signedDriverAbbrs), academy.abbr])];
+  signedDriverAbbrs = state.career.signedDrivers;
+  state.career.academyOffer = null;
+  applySignedDrivers();
+  saveCareer();
+  render();
 }
 
 function acceptSeasonContract(teamIndex) {
@@ -1610,6 +1759,7 @@ renderRace = function() {
       ${weatherAlert ? `<div class="weather-banner"><b>${weatherAlert}</b><span>${r.weather.includes("rain") ? "Check intermediate or wet tires now." : "Review tire choice before the next lap."}</span></div>` : ""}
       <div class="standings-shell">${timingTower()}</div>
       <div class="driver-grid">
+        ${teamOrdersPanel()}
         ${commandCard(p1)}
         ${commandCard(p2)}
       </div>
@@ -1617,6 +1767,22 @@ renderRace = function() {
       <div class="feed">${r.feed.slice(-8).reverse().map(f => `<div class="feed-line">${f}</div>`).join("")}</div>
       ${r.pitModal ? pitModal(r.pitModal) : ""}
     </section>`;
+}
+
+function teamOrdersPanel() {
+  const order = state.race.teamOrder || "Free";
+  const options = [
+    ["Free", "Free Race"],
+    ["Hold", "Hold Station"],
+    ["Swap", "Swap Cars"],
+    ["BackLead", "Back Lead"]
+  ];
+  return `<div class="team-orders-panel">
+    <div><b>Team Orders</b><span>${order === "Free" ? "Drivers may race" : options.find(o => o[0] === order)?.[1] || order}</span></div>
+    <div class="team-order-buttons">
+      ${options.map(([key, label]) => `<button class="${order === key ? "selected" : ""}" onclick="setTeamOrder('${key}')">${label}</button>`).join("")}
+    </div>
+  </div>`;
 }
 
 timingTower = function() {
@@ -1641,6 +1807,7 @@ commandCard = function(car) {
     <div class="delta-card"><span>Delta ahead</span><b>${ahead ? `${gapFor(car, -1)} to ${ahead.abbr}` : "Leader"}</b></div>
     <div class="delta-card delta-behind"><span>Delta behind</span><b>${behind ? `${gapFor(car, 1)} to ${behind.abbr}` : "Clear"}</b></div>
     ${weatherWarning ? `<div class="weather-card"><span>Weather</span><b>${weatherWarning}</b></div>` : ""}
+    ${car.wingDamage ? `<div class="incident-chip"><span>Damage</span><b>Front wing - pace loss</b></div>` : ""}
     <div class="rule-chip"><span>Rule</span><b>${ruleStatus(car)}</b></div>
     <div class="wear-line"><span class="compound ${car.tire}">${compounds[car.tire].short}</span><div class="wearbar"><i style="width:${car.wear}%"></i></div><b>${Math.round(car.wear)}%</b></div>
     <div class="gapline"><span>Behind ${gapFor(car, 1)}</span><span>Last ${car.lastLap ? car.lastLap.toFixed(1) + "s" : "--"}</span><span>Risk ${car.risk}</span></div>
@@ -1804,6 +1971,7 @@ window.setSetup = setSetup;
 window.runQualifying = runQualifying;
 window.startRace = startRace;
 window.setCommand = setCommand;
+window.setTeamOrder = setTeamOrder;
 window.openPit = openPit;
 window.closePit = closePit;
 window.queuePit = queuePit;
@@ -1815,6 +1983,7 @@ window.skipInterview = skipInterview;
 window.upgrade = upgrade;
 window.setPlayerTeam = setPlayerTeam;
 window.acceptSeasonContract = acceptSeasonContract;
+window.promoteAcademyDriver = promoteAcademyDriver;
 window.buyDriver = buyDriver;
 window.assignDriver = assignDriver;
 window.setUsername = setUsername;
