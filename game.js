@@ -9,30 +9,30 @@ const compounds = {
 };
 
 const tracks = [
-  ["Australia", "Melbourne", 62, 58, 28, 6.4, 8, 78, 31],
-  ["China", "Shanghai", 68, 62, 24, 6.7, 10, 76, 28],
-  ["Japan", "Suzuka", 55, 86, 32, 6.8, 12, 79, 29],
-  ["Bahrain", "Sakhir", 72, 84, 6, 6.2, 8, 80, 38],
-  ["Saudi Arabia", "Jeddah", 74, 55, 4, 6.1, 16, 88, 34],
-  ["USA", "Miami", 66, 66, 30, 6.5, 10, 82, 35],
-  ["Canada", "Montreal", 73, 52, 36, 6.0, 18, 83, 25],
-  ["Monaco", "Monaco", 18, 34, 22, 5.7, 22, 58, 27],
-  ["Spain", "Barcelona-Catalunya", 50, 82, 20, 6.8, 8, 75, 31],
-  ["Austria", "Spielberg", 76, 64, 31, 5.9, 12, 82, 26],
-  ["Great Britain", "Silverstone", 67, 86, 40, 6.7, 9, 85, 22],
-  ["Belgium", "Spa-Francorchamps", 72, 78, 55, 7.0, 15, 87, 20],
-  ["Hungary", "Budapest", 38, 72, 28, 6.3, 12, 69, 33],
-  ["Netherlands", "Zandvoort", 42, 76, 42, 6.4, 13, 72, 24],
-  ["Italy", "Monza", 84, 42, 22, 5.8, 10, 91, 29],
-  ["Spain", "Madrid", 61, 68, 18, 6.4, 12, 77, 32],
-  ["Azerbaijan", "Baku", 79, 45, 17, 6.1, 24, 89, 30],
-  ["Singapore", "Singapore", 46, 78, 44, 6.6, 26, 64, 36],
-  ["USA", "Austin", 71, 76, 23, 6.5, 12, 81, 30],
-  ["Mexico", "Mexico City", 63, 58, 18, 6.4, 10, 78, 27],
-  ["Brazil", "Sao Paulo", 70, 74, 48, 6.1, 18, 76, 25],
-  ["USA", "Las Vegas", 82, 38, 10, 5.9, 15, 92, 18],
-  ["Qatar", "Lusail", 58, 90, 8, 6.7, 9, 84, 34],
-  ["Abu Dhabi", "Yas Marina", 64, 56, 4, 6.2, 8, 79, 31]
+  ["Australia", "Melbourne", 62, 58, 28, 6.4, 8, 253, 31],
+  ["China", "Shanghai", 68, 62, 24, 6.7, 10, 217, 28],
+  ["Japan", "Suzuka", 55, 86, 32, 6.8, 12, 240, 29],
+  ["Bahrain", "Sakhir", 72, 84, 6, 6.2, 8, 223, 38],
+  ["Saudi Arabia", "Jeddah", 74, 55, 4, 6.1, 16, 255, 34],
+  ["USA", "Miami", 66, 66, 30, 6.5, 10, 226, 35],
+  ["Canada", "Montreal", 73, 52, 36, 6.0, 18, 224, 25],
+  ["Monaco", "Monaco", 18, 34, 22, 5.7, 22, 172, 27],
+  ["Spain", "Barcelona-Catalunya", 50, 82, 20, 6.8, 8, 236, 31],
+  ["Austria", "Spielberg", 76, 64, 31, 5.9, 12, 247, 26],
+  ["Great Britain", "Silverstone", 67, 86, 40, 6.7, 9, 252, 22],
+  ["Belgium", "Spa-Francorchamps", 72, 78, 55, 7.0, 15, 251, 20],
+  ["Hungary", "Budapest", 38, 72, 28, 6.3, 12, 215, 33],
+  ["Netherlands", "Zandvoort", 42, 76, 42, 6.4, 13, 223, 24],
+  ["Italy", "Monza", 84, 42, 22, 5.8, 10, 265, 29],
+  ["Spain", "Madrid", 61, 68, 18, 6.4, 12, 213, 32],
+  ["Azerbaijan", "Baku", 79, 45, 17, 6.1, 24, 216, 30],
+  ["Singapore", "Singapore", 46, 78, 44, 6.6, 26, 204, 36],
+  ["USA", "Austin", 71, 76, 23, 6.5, 12, 215, 30],
+  ["Mexico", "Mexico City", 63, 58, 18, 6.4, 10, 207, 27],
+  ["Brazil", "Sao Paulo", 70, 74, 48, 6.1, 18, 231, 25],
+  ["USA", "Las Vegas", 82, 38, 10, 5.9, 15, 239, 18],
+  ["Qatar", "Lusail", 58, 90, 8, 6.7, 9, 244, 34],
+  ["Abu Dhabi", "Yas Marina", 64, 56, 4, 6.2, 8, 232, 31]
 ].map((t, i) => ({
   country: t[0], name: t[1], overtaking: t[2], deg: t[3], rain: t[4], pitLoss: t[5],
   safety: t[6], speed: t[7], temp: t[8], seed: i + 2
@@ -94,11 +94,16 @@ let userProfile = loadProfile();
 
 let state = {
   view: hasSelectedTeam() ? "menu" : "teamSelect",
-  setup: { laps: 10, track: tracks[0], tire1: "Medium", tire2: "Soft" },
+  setup: { laps: 20, surface: "Dry", track: tracks[0], tire1: "Medium", tire2: "Soft" },
   race: null,
   career: loadCareer()
 };
+let restoringHistory = false;
 applySavedDriverGrowth();
+normalizeUniqueTeamDrivers();
+playerTeam = f1Teams[selectedTeamIndex] || f1Teams[0];
+playerDrivers = playerTeam.drivers;
+state.career.signedDrivers = (state.career.signedDrivers || []).filter(abbr => allDrivers().some(driver => driver.abbr === abbr));
 signedDriverAbbrs = state.career.signedDrivers || playerTeam.drivers.map(d => d.abbr);
 applySignedDrivers();
 applyTheme();
@@ -122,7 +127,7 @@ function saveSelectedTeamIndex(index) {
   try { localStorage.setItem("apexStrategyTeam", String(index)); } catch {}
 }
 function defaultProfile() {
-  return { username: "Team Principal", theme: "dark" };
+  return { username: "Team Principal" };
 }
 function loadProfile() {
   try {
@@ -136,11 +141,12 @@ function saveProfile() {
   try { localStorage.setItem("apexStrategyProfile", JSON.stringify(userProfile)); } catch {}
 }
 function applyTheme() {
-  document.body.classList.toggle("light-theme", userProfile.theme === "light");
+  document.body.classList.remove("light-theme");
 }
 function defaultCareer() {
   return {
-    credits: 6200, rep: 3, ranking: 10, round: 0, expectationStrikes: 0, lastNotice: "", seasonPlayerPoints: 0,
+    credits: 5000, rep: 3, ranking: 10, round: 0, expectationStrikes: 0, lastNotice: "", seasonPlayerPoints: 0,
+    tab: "next",
     driverStandings: {}, constructorStandings: {}, completedSeason: false,
     car: 62, pit: 60, tire: 58, strategy: 61, reliability: 64,
     engine: 60, frontWing: 58, floor: 57, brakeCooling: 56,
@@ -172,6 +178,30 @@ function allDrivers() {
   const academyDrivers = (state.career.academyDrivers || []).map(driver => ({ ...driver, teamName: "Academy", teamTag: "ACD" }));
   return [...gridDrivers, ...academyDrivers];
 }
+function uniqueAbbr(base) {
+  const taken = new Set(f1Teams.flatMap(team => team.drivers.map(d => d.abbr)).concat((state.career.academyDrivers || []).map(d => d.abbr)));
+  let idx = 10;
+  let candidate = base;
+  while (taken.has(candidate)) {
+    candidate = `${base.slice(0, 2)}${idx++}`;
+  }
+  return candidate;
+}
+
+function normalizeUniqueTeamDrivers() {
+  const seen = new Set();
+  f1Teams.forEach(team => {
+    team.drivers = team.drivers.map(driver => {
+      if (!driver || !driver.abbr) return makeJuniorDriver(team.tag);
+      if (seen.has(driver.abbr)) {
+        return makeJuniorDriver(team.tag);
+      }
+      seen.add(driver.abbr);
+      return driver;
+    });
+  });
+}
+
 function findDriver(abbr) {
   return allDrivers().find(driver => driver.abbr === abbr) || playerTeam.drivers[0];
 }
@@ -193,6 +223,7 @@ function setPlayerTeam(index, goTo = "menu") {
   saveSelectedTeamIndex(selectedTeamIndex);
   saveCareer();
   state.view = goTo;
+  pushAppHistory(goTo);
   render();
 }
 
@@ -211,21 +242,35 @@ function render() {
   if (state.view === "careerSettings") renderCareerSettings();
 }
 
+function pushAppHistory(view, replace = false) {
+  if (restoringHistory || !window.history?.pushState) return;
+  const url = `${location.pathname}${location.search}#${view}`;
+  const payload = { apexView: view };
+  if (replace) history.replaceState(payload, "", url);
+  else history.pushState(payload, "", url);
+}
+
+window.addEventListener("popstate", event => {
+  restoringHistory = true;
+  state.view = event.state?.apexView || "menu";
+  render();
+  restoringHistory = false;
+});
+
 function renderMenu() {
   app.innerHTML = cls`
     <section class="screen hero">
       ${speedLines()}
-      <div class="top-pill"><span class="badge">Team Apex</span><span>RP ${state.career.credits}</span></div>
+      <div class="top-pill"><span class="badge">Team Apex</span></div>
       <div class="title-block">
-        <div class="logo-mark"></div>
         <h1>Apex<br>Strategy</h1>
         <p class="subtitle">10 or 20 laps. 2 drivers. 1 perfect strategy.</p>
       </div>
       <div class="car-silhouette"></div>
       <div class="menu-grid">
         <button class="primary-btn career-btn" onclick="go('career')">▤ Career</button>
-        <button class="secondary-btn" onclick="quickRace(10)">Grand Prix</button>
-        <button class="secondary-btn" onclick="quickRace(20)">20-Lap Race</button>
+        <button class="secondary-btn" onclick="quickRace(20)">Grand Prix</button>
+        <button class="secondary-btn" onclick="quickRace(30)">30-Lap Race</button>
         <button class="secondary-btn" onclick="go('garage')">◈ Garage</button>
         <button class="ghost-btn" onclick="go('settings')">⚙ Settings</button>
       </div>
@@ -237,19 +282,21 @@ function speedLines() {
     `<span style="top:${8 + i * 7}%; animation-delay:${i * .19}s; width:${70 + (i % 4) * 42}px"></span>`).join("")}</div>`;
 }
 
-function go(view) { state.view = view; render(); }
+function go(view) { state.view = view; pushAppHistory(view); render(); }
 function quickRace(laps, mode = "grandPrix") {
   state.setup.laps = laps;
+  state.setup.surface = "Dry";
   state.setup.mode = mode;
   state.setup.grid = null;
   state.setup.track = mode === "career" ? tracks[state.career.round % tracks.length] : tracks[Math.floor(Math.random() * tracks.length)];
   state.view = "setup";
+  pushAppHistory("setup");
   render();
 }
 
 function startCareerRace() {
   if (state.career.completedSeason) return go("seasonContracts");
-  quickRace(10, "career");
+  quickRace(20, "career");
 }
 
 function resetSeason() {
@@ -538,6 +585,7 @@ function statBar(k, v) {
 
 function setSetup(k, v) { state.setup[k] = v; render(); }
 function setLaps(laps) { state.setup.laps = laps; render(); }
+function setSurface(surface) { state.setup.surface = surface === "Wet" ? "Wet" : "Dry"; render(); }
 function randomTrack() { state.setup.track = tracks[Math.floor(Math.random() * tracks.length)]; render(); }
 function setTrack(index) { state.setup.track = tracks[Number(index)]; render(); }
 function setGrandPrixTeam(index) { setPlayerTeam(index, "setup"); }
@@ -558,11 +606,13 @@ function runQualifying() {
   state.setup.grid = playerDrivers.map(driver => ranked.findIndex(entry => entry.driver.abbr === driver.abbr) + 1);
   state.setup.qualifying = ranked.slice(0, 8).map((entry, index) => ({ pos: index + 1, abbr: entry.driver.abbr, team: entry.team.tag }));
   state.view = "tireSelect";
+  pushAppHistory("tireSelect");
   render();
 }
 
 function startRace(custom = {}) {
   const setup = { ...state.setup, ...custom };
+  if (!custom.weather && setup.surface === "Wet") custom.weather = "rain3";
   const startPos = custom.start || setup.grid || playerStartPositions(setup);
   const cars = [];
   playerDrivers.forEach((d, i) => cars.push(makeCar(d.abbr, d.name, true, i + 1, startPos[i], setup[`tire${i + 1}`] || custom.tires?.[i] || (i ? "Soft" : "Medium"), playerTeam, d)));
@@ -594,12 +644,13 @@ function startRace(custom = {}) {
   };
   sortCars();
   state.view = "race";
+  pushAppHistory("race");
   render();
 }
 
 function playerStartPositions(setup) {
   const base = 1;
-  const spread = setup.laps === 20 ? 20 : 18;
+  const spread = setup.laps <= 20 ? 20 : setup.laps <= 30 ? 21 : 22;
   const first = clamp(base + Math.floor(Math.random() * spread), 1, 20);
   let second = clamp(first + pick([-4, -3, -2, 2, 3, 4, 5], Date.now() + setup.track.seed), 1, 22);
   if (second === first) second = clamp(first + 2, 1, 22);
@@ -610,7 +661,7 @@ function makeCar(abbr, name, player, driverNum, startPos, tire, team = null, dri
   return {
     abbr, name, player, driverNum, team, driver, position: startPos, start: startPos, tire, tireAge: 0,
     wear: tire === "Soft" ? 8 : tire === "Medium" ? 5 : 3, mode: "Balanced", pitQueued: false, stops: 0,
-    pitTarget: tire, usedCompounds: [tire], rulePenalty: 0, lastLap: 0, total: startPos * .72, risk: "Low", progress: rand(startPos + 4),
+    pitTarget: tire, usedCompounds: [tire], rulePenalty: 0, lastLap: 0, bestLap: 999, total: startPos * .72, risk: "Low", progress: rand(startPos + 4),
     form: 0, dnf: false, dnfReason: "", wingDamage: false, incidentNote: ""
   };
 }
@@ -636,12 +687,12 @@ function buildWeatherPlan(setup, custom) {
   const r = Math.random() * 100;
   if (custom.weather === "rain3") {
     plan[1] = "Cloudy"; plan[2] = "Light rain warning"; plan[3] = "Light rain"; plan[4] = "Light rain"; plan[5] = "Drying track";
-  } else if (r < setup.track.rain * (setup.laps === 20 ? 1 : .82)) {
-    const start = setup.laps === 20 ? 4 + Math.floor(Math.random() * 10) : 3 + Math.floor(Math.random() * 5);
+  } else if (r < setup.track.rain * (setup.laps <= 20 ? 1 : .84)) {
+    const start = setup.laps <= 20 ? 4 + Math.floor(Math.random() * 10) : setup.laps <= 30 ? 7 + Math.floor(Math.random() * 14) : 10 + Math.floor(Math.random() * 18);
     for (let l = 1; l <= setup.laps; l++) {
       if (l === start - 1) plan[l] = "Light rain warning";
       if (l >= start) plan[l] = "Light rain";
-      if (setup.laps === 10 && l >= start + 2 && Math.random() < .35) plan[l] = "Heavy rain";
+      if (setup.laps <= 30 && l >= start + 2 && Math.random() < .35) plan[l] = "Heavy rain";
       if (l >= start + 3 && Math.random() < .38) plan[l] = "Drying track";
     }
   } else if (Math.random() < .35) {
@@ -651,9 +702,10 @@ function buildWeatherPlan(setup, custom) {
 }
 
 function buildSafetyLap(setup, custom) {
-  if (![10, 20].includes(setup.laps)) return null;
-  if (custom.safety) return setup.laps === 20 ? 11 : 5;
-  return Math.random() * 100 < setup.track.safety ? pick(setup.laps === 20 ? [7, 12, 16] : [4, 7], setup.track.seed + Date.now()) : null;
+  if (![20, 30, 50].includes(setup.laps)) return null;
+  if (custom.safety) return setup.laps <= 20 ? 10 : setup.laps <= 30 ? 15 : 25;
+  const pool = setup.laps <= 20 ? [7, 12, 16] : setup.laps <= 30 ? [9, 15, 22] : [12, 25, 38];
+  return Math.random() * 100 < setup.track.safety ? pick(pool, setup.track.seed + Date.now()) : null;
 }
 
 function renderRace() {
@@ -726,14 +778,26 @@ function setCommand(num, cmd) {
 }
 function setTeamOrder(order) {
   if (!state.race) return;
-  state.race.teamOrder = order;
+  state.race.teamOrder = state.race.teamOrder === order ? "Free" : order;
   const labels = {
     Free: "Free race",
     Hold: "Hold station",
     Swap: "Swap cars",
-    BackLead: "Back the lead driver"
+    BackLead: "Back up driver behind"
   };
-  state.race.feed.push(`<strong>Team order:</strong> ${labels[order] || order}.`);
+  state.race.feed.push(`<strong>Team order:</strong> ${labels[state.race.teamOrder] || state.race.teamOrder}.`);
+  render();
+}
+
+function setBackUpDriver(driverNum) {
+  if (!state.race) return;
+  state.race.backUpDriver = state.race.backUpDriver === driverNum ? null : driverNum;
+  if (state.race.backUpDriver) {
+    const car = state.race.cars.find(c => c.player && c.driverNum === state.race.backUpDriver);
+    state.race.feed.push(`<strong>Team order:</strong> ${car?.abbr || "Driver"} set to back up behind.`);
+  } else {
+    state.race.feed.push(`<strong>Team order:</strong> back-up order cleared.`);
+  }
   render();
 }
 function openPit(num) { state.race.pitModal = num; render(); }
@@ -902,12 +966,15 @@ function applyTeamOrders(events) {
   } else if (r.teamOrder === "Hold" && gap < 1.4) {
     chase.total += .22;
     events.push(`<strong>Team orders:</strong> drivers held station.`);
-  } else if (r.teamOrder === "BackLead") {
-    const nearestRival = r.cars.find(c => !c.player && !c.dnf && c.position === chase.position + 1);
-    if (nearestRival && Math.abs(chase.total - nearestRival.total) < 2.2) {
-      nearestRival.total += .28;
-      chase.total += .18;
-      events.push(`<strong>${chase.abbr}</strong> backed the lead car by managing the pack.`);
+  } else if (r.backUpDriver) {
+    const support = r.cars.find(c => c.player && c.driverNum === r.backUpDriver && !c.dnf);
+    if (support) {
+      const nearestRival = r.cars.find(c => !c.player && !c.dnf && c.position === support.position + 1);
+      if (nearestRival && Math.abs(support.total - nearestRival.total) < 2.2) {
+        nearestRival.total += .28;
+        support.total += .18;
+        events.push(`<strong>${support.abbr}</strong> backed up behind and managed the gap.`);
+      }
     }
   }
 }
@@ -922,7 +989,7 @@ function runCarLap(car, events) {
   const teammate = car.player ? state.race.cars.find(c => c.player && c !== car) : null;
   const teammateGap = teammate ? Math.abs(car.total - teammate.total) : 99;
   if (car.player && state.race.teamOrder === "Hold" && teammateGap < 1.2 && cmd === "Attack") cmd = "Balanced";
-  if (car.player && state.race.teamOrder === "BackLead" && teammate && car.position > teammate.position && teammateGap < 3.2) cmd = "Defend";
+  if (car.player && state.race.backUpDriver === car.driverNum && teammate && car.position > teammate.position && teammateGap < 3.2) cmd = "Defend";
   const stat = car.driver?.stats || (car.player ? playerDrivers[car.driverNum - 1].stats : null);
   const carPackage = car.player
     ? (playerTeam.strength * .45 + state.career.car * .2 + state.career.engine * .18 + state.career.frontWing * .1 + state.career.floor * .07)
@@ -932,7 +999,7 @@ function runCarLap(car, events) {
   const threatBehind = r.cars.find(c => c.position === car.position + 1);
   const closeThreat = threatBehind && Math.abs(car.total - threatBehind.total) < 1.8;
   let lap = 78 - (teamStrength - 60) * .035 + tire.base;
-  const wearPenalty = Math.pow(car.wear / 100, 1.65) * (r.length === 20 ? 2.35 : 2.7);
+  const wearPenalty = Math.pow(car.wear / 100, 1.65) * (r.length <= 20 ? 2.35 : r.length <= 30 ? 2.55 : 2.75);
   lap += wearPenalty;
   if (cmd === "Attack") lap -= .54;
   if (cmd === "Conserve") lap += .42;
@@ -997,6 +1064,7 @@ function runCarLap(car, events) {
     events.push(`<strong>${car.abbr}</strong> has minor wing damage.`);
   }
   car.lastLap = lap;
+  car.bestLap = Math.min(car.bestLap || lap, lap);
   car.total += lap;
 }
 
@@ -1020,7 +1088,7 @@ function maybeDnf(car, events) {
   const incidentTrack = r.track.safety / 5200;
   const wearRisk = Math.max(0, car.wear - 84) / 7000;
   const weatherRisk = r.weather === "Heavy rain" ? .0016 : r.weather === "Light rain" ? .0008 : 0;
-  const baseRisk = r.length === 20 ? .0008 : .00045;
+  const baseRisk = r.length <= 20 ? .0008 : r.length <= 30 ? .0006 : .00045;
   const risk = clamp(baseRisk + incidentTrack + wearRisk + weatherRisk - (reliability - 60) / 32000, .00012, .0038);
   if (Math.random() >= risk) return;
   car.dnf = true;
@@ -1069,7 +1137,7 @@ function aiStrategy(car, idx) {
     car.pitQueued = true; car.pitTarget = "Intermediate"; return;
   }
   const late = r.length - r.lap <= 2;
-  if ((car.wear > (r.length === 20 ? 58 : 68) || r.safetyActive) && r.lap < r.length && !car.pitQueued && Math.random() < .58) {
+  if ((car.wear > (r.length <= 20 ? 58 : r.length <= 30 ? 64 : 68) || r.safetyActive) && r.lap < r.length && !car.pitQueued && Math.random() < .58) {
     car.pitQueued = true;
     car.pitTarget = nextDryCompound(car, late ? "Soft" : pick(["Medium","Hard","Soft"], idx + r.lap));
   }
@@ -1127,19 +1195,19 @@ function finishRace() {
   const p = r.cars.filter(c => c.player);
   p.filter(c => c.rulePenalty).forEach(c => r.feed.push(`<strong>${c.name}</strong> rule penalty: +${c.rulePenalty}s.`));
   const points = p.reduce((sum, c) => sum + pointForPosition(c.position, c), 0);
-  const payout = racePayout(points);
-  state.career.credits += payout;
+  const payout = r.mode === "career" ? racePayout(points) : 0;
+  if (r.mode === "career") state.career.credits += payout;
   state.career.rep += points > 8 ? 1 : 0;
   if (r.mode === "career") r.careerNotice = applyCareerResult(r, p, points);
   saveCareer();
   r.result = { points, payout, grade: gradeRace(p, points), bestLap: Math.min(...p.map(c => c.lastLap)).toFixed(2) };
   state.view = "results";
+  pushAppHistory("results");
   render();
 }
 
 function racePayout(points) {
-  const multiplier = playerTeam.strength >= 88 ? 115 : playerTeam.strength >= 78 ? 90 : 65;
-  return Math.round(350 + points * multiplier);
+  return Math.max(0, Math.round(points * 10));
 }
 
 function pointForPosition(position) {
@@ -1403,7 +1471,7 @@ function renderCareer() {
     ${careerUpgrade("Tire Efficiency", "tire", "Reduced wear during attack and defensive laps.")}
     ${careerUpgrade("Strategy Accuracy", "strategy", "Sharper pit rejoin and risk recommendations.")}
     ${careerUpgrade("Reliability", "reliability", "Fewer lock-ups and costly mistakes.")}
-    <button class="primary-btn race-lap-btn" onclick="quickRace(10)">Enter Next Event</button>
+    <button class="primary-btn race-lap-btn" onclick="quickRace(20)">Enter Next Event</button>
   </section>`;
 }
 
@@ -1530,13 +1598,62 @@ function seasonTrackList() {
 function buyDriver(abbr) {
   const driver = findDriver(abbr);
   const price = driverPrice(driver);
-  if (!ownsDriver(driver) && state.career.credits >= price) {
-    state.career.credits -= price;
-    signedDriverAbbrs.push(driver.abbr);
-    state.career.signedDrivers = signedDriverAbbrs;
-    saveCareer();
-  }
+  if (ownsDriver(driver) || state.career.credits < price) return render();
+  state.career.credits -= price;
+  signedDriverAbbrs.push(driver.abbr);
+  state.career.signedDrivers = signedDriverAbbrs;
+  autoTransferDriverToPlayerTeam(driver.abbr);
+  saveCareer();
   render();
+}
+
+function makeJuniorDriver(teamTag) {
+  const first = ["Luca","Noah","Rafael","Arjun","Mateo","Kai","Theo","Niko","Leo","Sami"];
+  const last = ["Rossi","Meyer","Patel","Silva","Costa","Kovac","Ibrahim","Sato","Novak","Khan"];
+  const seed = Math.floor(Math.random() * 10000);
+  const name = `${first[seed % first.length]} ${last[(seed * 7) % last.length]}`;
+  const abbr = uniqueAbbr(`${teamTag.slice(0, 2)}${(seed % 90) + 10}`);
+  const base = 68 + (seed % 9);
+  return {
+    name,
+    abbr,
+    stats: {
+      Pace: base + 2,
+      Tire: base,
+      Overtaking: base + 1,
+      Defending: base,
+      Wet: base - 1,
+      Consistency: base - 1,
+      Start: base + 1
+    }
+  };
+}
+
+function autoTransferDriverToPlayerTeam(abbr) {
+  const sourceTeam = f1Teams.find(team => team.drivers.some(d => d.abbr === abbr));
+  const targetTeam = playerTeam;
+  if (!sourceTeam || !targetTeam) return;
+
+  const boughtDriver = sourceTeam.drivers.find(d => d.abbr === abbr);
+  if (!boughtDriver) return;
+
+  // Auto-decide seat by performance: replace weaker current player driver.
+  const seatToReplace = playerDrivers[0] && playerDrivers[1] && driverRating(playerDrivers[0]) <= driverRating(playerDrivers[1]) ? 0 : 1;
+  const releasedDriver = playerDrivers[seatToReplace];
+
+  targetTeam.drivers[seatToReplace] = boughtDriver;
+  playerDrivers[seatToReplace] = boughtDriver;
+
+  // Ensure unique real-driver roster: selling team gets released driver or a junior.
+  const sourceSeat = sourceTeam.drivers.findIndex(d => d.abbr === abbr);
+  const releasedInUse = f1Teams.some(team =>
+    team.tag !== sourceTeam.tag && team.drivers.some(d => d.abbr === releasedDriver?.abbr)
+  );
+  sourceTeam.drivers[sourceSeat] = releasedDriver && !releasedInUse ? releasedDriver : makeJuniorDriver(sourceTeam.tag);
+  normalizeUniqueTeamDrivers();
+
+  signedDriverAbbrs = Array.from(new Set(playerDrivers.map(d => d.abbr).concat(state.career.signedDrivers || [])));
+  state.career.signedDrivers = signedDriverAbbrs;
 }
 
 function assignDriver(abbr, seat) {
@@ -1558,7 +1675,7 @@ function assignDriver(abbr, seat) {
 function renderGarage() {
   app.innerHTML = cls`<section class="screen">
     <div class="header-row"><button class="back" onclick="go('menu')">‹</button><h2>Garage</h2><span class="badge">RP ${state.career.credits}</span></div>
-    <div class="career-card"><h2>Team Apex Badge</h2><p class="muted">Original cyan and red racing identity. No licensed liveries, logos, or copied assets.</p><div class="logo-mark"></div></div>
+    <div class="career-card"><h2>Team Apex Badge</h2><p class="muted">Original cyan and red racing identity. No licensed liveries, logos, or copied assets.</p></div>
     ${playerDrivers.map(d => `<div class="driver-card"><div class="driver-name">${d.name}</div><div class="bars">${Object.entries(d.stats).map(([k,v]) => statBar(k,v)).join("")}</div></div>`).join("")}
   </section>`;
 }
@@ -1574,33 +1691,30 @@ function renderSettings() {
 
 renderMenu = function() {
   app.innerHTML = cls`
-    <section class="screen hero console-home">
-      ${speedLines()}
+    <section class="screen hero console-home ea-home">
       <nav class="console-nav">
         <button class="active" onclick="go('menu')">Home</button>
         <button onclick="go('career')">Career</button>
-        <button onclick="quickRace(10, 'grandPrix')">Grand Prix</button>
+        <button onclick="quickRace(20, 'grandPrix')">Grand Prix</button>
         <button onclick="go('settings')">Settings</button>
       </nav>
-      <div class="home-status">
-        <div class="rp-stack"><span>RESOURCE POINTS</span><b>RP ${state.career.credits}</b></div>
+      <div class="ea-brand">
+        <span>Apex Strategy</span>
+        <b>Race Control</b>
       </div>
-      <div class="title-block">
-        <div class="logo-mark"></div>
-        <h1>Apex<br>Strategy</h1>
-      </div>
-      <div class="home-feature">
-        <div>
-          <span class="feature-kicker">Featured Mode</span>
-          <h2>New Career</h2>
-          <p>Lead a real team through the season calendar, manage development, handle interviews, and fight for the WDC and WCC.</p>
-        </div>
-        <div class="feature-car" aria-hidden="true"><img src="assets/apex-2026-car.webp" alt=""></div>
-      </div>
-      <div class="menu-grid">
-        <button class="primary-btn career-btn menu-tile" onclick="go('career')"><span>Career</span><small>Continue the championship</small></button>
-        <button class="secondary-btn menu-tile" onclick="quickRace(10, 'grandPrix')"><span>Grand Prix</span><small>Choose any team and venue</small></button>
-        <button class="ghost-btn menu-tile" onclick="go('settings')"><span>Settings</span><small>Profile and display</small></button>
+      <div class="ea-card-grid">
+        <button class="ea-menu-card ea-card-large active" style="--bg:url('assets/menu-career.jpg')" onclick="go('career')">
+          <span class="ea-card-label">Career</span>
+          <small>Lead your team through the season, contracts, upgrades and championship pressure.</small>
+        </button>
+        <button class="ea-menu-card" style="--bg:url('assets/menu-grand-prix.jpg')" onclick="quickRace(20, 'grandPrix')">
+          <span class="ea-card-label">Grand Prix</span>
+          <small>Create a race weekend with any team and circuit.</small>
+        </button>
+        <button class="ea-menu-card" style="--bg:url('assets/menu-settings.webp')" onclick="go('settings')">
+          <span class="ea-card-label">Settings</span>
+          <small>Profile, display mode and save preferences.</small>
+        </button>
       </div>
     </section>`;
 }
@@ -1677,7 +1791,6 @@ function acceptSeasonContract(teamIndex) {
 function renderTeamSelect() {
   app.innerHTML = cls`<section class="screen">
     <div class="title-block compact-title">
-      <div class="logo-mark"></div>
       <h1>Apex<br>Strategy</h1>
       <p class="subtitle">Choose the team you want to manage.</p>
     </div>
@@ -1693,19 +1806,20 @@ renderSetup = function() {
   const careerMode = s.mode === "career";
   app.innerHTML = cls`
     <section class="screen">
-      <div class="header-row"><button class="back text-back" onclick="go('${careerMode ? "career" : "menu"}')">Back</button><h2>Apex Setup</h2>${careerMode ? `<span class="badge">Locked</span>` : `<button class="back text-back" onclick="randomTrack()">New</button>`}</div>
-      <div class="section-title">${careerMode ? `Career Round ${state.career.round + 1}/${tracks.length}` : "Grand Prix Venue"}</div>
+      <div class="header-row"><button class="back text-back" onclick="go('${careerMode ? "career" : "menu"}')">Back</button><h2>Setup</h2>${careerMode ? `<span class="badge">Locked</span>` : `<button class="back text-back" onclick="randomTrack()">New</button>`}</div>
+      <div class="section-title">${careerMode ? `Career Round ${state.career.round + 1}/${tracks.length}` : "Venue Selection"}</div>
       ${trackCard(s.track, s.laps)}
-      ${careerMode ? "" : `<select class="track-select" onchange="setTrack(this.value)">
-        ${tracks.map((t, i) => `<option value="${i}" ${t === s.track ? "selected" : ""}>${t.country} - ${t.name}</option>`).join("")}
-      </select>
+      ${careerMode ? "" : `<div class="track-strip">
+        ${tracks.map((t, i) => `<button class="track-tile ${t === s.track ? "active" : ""}" onclick="setTrack(${i})"><span>${t.country}</span><small>${t.name}</small></button>`).join("")}
+      </div>
       <select class="track-select" onchange="setGrandPrixTeam(this.value)">
         ${f1Teams.map((t, i) => `<option value="${i}" ${i === selectedTeamIndex ? "selected" : ""}>${t.name}</option>`).join("")}
       </select>`}
       <div class="section-title">Race Length</div>
       <div class="segmented">
-        <button class="${s.laps === 10 ? "selected" : ""}" onclick="setLaps(10)">10 Laps</button>
         <button class="${s.laps === 20 ? "selected" : ""}" onclick="setLaps(20)">20 Laps</button>
+        <button class="${s.laps === 30 ? "selected" : ""}" onclick="setLaps(30)">30 Laps</button>
+        <button class="${s.laps === 50 ? "selected" : ""}" onclick="setLaps(50)">50 Laps</button>
       </div>
       <div class="section-title">Qualifying</div>
       <div class="career-card"><h3>Tyres are selected after qualifying</h3><p class="muted">Run qualifying first, then choose each driver's starting compound from their grid position.</p></div>
@@ -1732,20 +1846,43 @@ renderTireSelect = function() {
 }
 
 trackCard = function(track, laps) {
-  return cls`<div class="track-card compact-track-card">
-    <div class="track-head">
-      <div><div class="track-name">${track.name}</div><div class="track-country">${track.country}</div></div>
-      <div class="badge">${laps} laps</div>
-    </div>
-    <div class="stat-grid">
-      <div class="mini-stat"><b>${track.overtaking}</b><span>Overtaking</span></div>
-      <div class="mini-stat"><b>${track.deg}</b><span>Tire Wear</span></div>
-      <div class="mini-stat"><b>${track.rain}%</b><span>Rain</span></div>
-      <div class="mini-stat"><b>${track.pitLoss.toFixed(1)}s</b><span>Pit Loss</span></div>
-      <div class="mini-stat"><b>${[10,20].includes(laps) ? track.safety + "%" : "Off"}</b><span>Safety Car</span></div>
-      <div class="mini-stat"><b>${track.temp}C</b><span>Temp</span></div>
+  const surface = state.setup.surface || "Dry";
+  const photo = getTrackPhoto(track);
+  return cls`<div class="track-venue-card" style="--venue-bg:url('assets/menu-grand-prix.jpg')">
+    <div class="track-venue-art" style="background-image:
+      linear-gradient(90deg, rgba(8,10,14,.96) 0 46%, rgba(8,10,14,.26) 78%, rgba(8,10,14,.86) 100%),
+      linear-gradient(180deg, rgba(0,0,0,.1), rgba(0,0,0,.45)),
+      url('${photo}')"></div>
+    <div class="track-venue-copy">
+      <div class="venue-badges"><span class="venue-badge laps">${laps} LAPS</span></div>
+      <div class="track-name">${track.country.toUpperCase()} ${track.name.toUpperCase()}</div>
+      <div class="track-country">${track.country}</div>
+      <div class="track-venue-body">
+        <div class="venue-stats">
+          <div class="venue-stat"><span>Avg Speed</span><b>${track.speed} km/h</b></div>
+          <div class="venue-stat"><span>Rain Chance</span><b>${track.rain}%</b></div>
+          <div class="venue-stat"><span>Tire Wear</span><b>${track.deg}%</b></div>
+          <div class="venue-stat"><span>Pit Loss</span><b>${track.pitLoss.toFixed(1)}s</b></div>
+          <div class="venue-stat"><span>Safety Car</span><b>${track.safety}%</b></div>
+        </div>
+      </div>
     </div>
   </div>`;
+}
+
+function getTrackPhoto(track) {
+  const query = `${track.name} ${track.country} race circuit`;
+  return `https://source.unsplash.com/1600x900/?${encodeURIComponent(query)}`;
+}
+
+function careerCardImage(index = 0) {
+  const pool = [
+    "assets/career-car-1.avif",
+    "assets/career-car-2.avif",
+    "assets/career-car-3.jpg",
+    "assets/career-car-4.jpg"
+  ];
+  return pool[((state.career.round || 0) + index) % pool.length];
 }
 
 setupDriver = function(num, driver, tire, gridPosition = null) {
@@ -1775,7 +1912,6 @@ renderRace = function() {
       ${weatherAlert ? `<div class="weather-banner"><b>${weatherAlert}</b><span>${r.weather.includes("rain") ? "Check intermediate or wet tires now." : "Review tire choice before the next lap."}</span></div>` : ""}
       <div class="standings-shell">${timingTower()}</div>
       <div class="driver-grid">
-        ${teamOrdersPanel()}
         ${commandCard(p1)}
         ${commandCard(p2)}
       </div>
@@ -1791,7 +1927,7 @@ function teamOrdersPanel() {
     ["Free", "Free Race"],
     ["Hold", "Hold Station"],
     ["Swap", "Swap Cars"],
-    ["BackLead", "Back Lead"]
+    ["BackLead", "Back Up Behind"]
   ];
   return `<div class="team-orders-panel">
     <div><b>Team Orders</b><span>${order === "Free" ? "Drivers may race" : options.find(o => o[0] === order)?.[1] || order}</span></div>
@@ -1829,6 +1965,8 @@ commandCard = function(car) {
     <div class="gapline"><span>Behind ${gapFor(car, 1)}</span><span>Last ${car.lastLap ? car.lastLap.toFixed(1) + "s" : "--"}</span><span>Risk ${car.risk}</span></div>
     <div class="commands">
       ${["Attack","Balanced","Defend","Conserve"].map(m => `<button ${car.dnf ? "disabled" : ""} class="${state.race.commands[car.driverNum] === m ? "selected" : ""}" onclick="setCommand(${car.driverNum}, '${m}')">${m}</button>`).join("")}
+      <button ${car.dnf ? "disabled" : ""} class="${state.race.teamOrder === "Swap" ? "selected" : ""}" onclick="setTeamOrder('Swap')">Swap</button>
+      <button ${car.dnf ? "disabled" : ""} class="${state.race.backUpDriver === car.driverNum ? "selected" : ""}" onclick="setBackUpDriver(${car.driverNum})">Back Up</button>
       <button ${car.dnf ? "disabled" : ""} class="pit-btn" onclick="${car.pitQueued ? `cancelPit(${car.driverNum})` : `openPit(${car.driverNum})`}">${car.pitQueued ? "Cancel Pit" : "Pit"}</button>
     </div>
   </div>`;
@@ -1842,23 +1980,115 @@ var carBehind = function(car) {
   return state.race.cars.find(c => c.position === car.position + 1);
 }
 
+function setCareerTab(tab) {
+  state.career.tab = tab;
+  render();
+}
+
+function careerTabs(active) {
+  const tabs = [
+    ["next", "Next Race"],
+    ["standings", "Standings"],
+    ["upgrades", "Buy Upgrades"],
+    ["market", "Driver Market"],
+    ["settings", "Settings"]
+  ];
+  return `<div class="career-tabs">${tabs.map(([key, label]) => `<button class="${active === key ? "active" : ""}" onclick="setCareerTab('${key}')">${label}</button>`).join("")}</div>`;
+}
+
+function nextRaceCard(track, expectation) {
+  return `<div class="next-race-card">
+    <div class="next-race-copy">
+      <span class="eyebrow">Next Race</span>
+      <h2>${track.country} Grand Prix</h2>
+      <p>${track.name}. ${playerTeam.name} expectation: ${expectation.label}.</p>
+      <div class="next-race-meta">
+        <span>${track.speed} km/h avg</span>
+        <span>${track.deg}% wear</span>
+        <span>${track.safety}% safety car</span>
+      </div>
+    </div>
+    <div class="next-race-art" style="--bg:url('assets/menu-career.jpg')"></div>
+  </div>`;
+}
+
+function leaderboardTable(cars) {
+  const rows = [...cars].sort((a, b) => a.position - b.position);
+  return `<div class="leaderboard-card">
+    <div class="leaderboard-head">
+      <span>POS</span><span>DRIVER</span><span>TEAM</span><span>GRID</span><span>STOPS</span><span>BEST</span><span>TIME</span><span>PTS</span>
+    </div>
+    <div class="leaderboard-body">
+      ${rows.map((c, i) => {
+        const pos = c.dnf ? "DNF" : i + 1;
+        const delta = c.start - (i + 1);
+        return `<div class="leaderboard-row ${c.player ? "player" : ""}">
+          <span class="pos-cell">${pos}${delta > 0 ? ` <i class="up">▲${delta}</i>` : delta < 0 ? ` <i class="down">▼${Math.abs(delta)}</i>` : ""}</span>
+          <span class="driver-cell"><strong>${c.abbr}</strong><small>${c.name}</small></span>
+          <span class="team-cell">${c.team?.name || playerTeam.name}</span>
+          <span>${c.start}</span>
+          <span>${c.stops}</span>
+          <span>${c.bestLap && c.bestLap < 998 ? c.bestLap.toFixed(3) : "--"}</span>
+          <span>${c.total < 9999 ? c.total.toFixed(3) : c.dnfReason || "--"}</span>
+          <span>${c.dnf ? 0 : pointForPosition(i + 1, c)}</span>
+        </div>`;
+      }).join("")}
+    </div>
+  </div>`;
+}
+
+function standingsTable(rows, title) {
+  const data = rows.slice(0, 10);
+  return `<div class="leaderboard-card">
+    <div class="leaderboard-head compact"><span>POS</span><span>${title}</span><span>PTS</span></div>
+    <div class="leaderboard-body">
+      ${data.length ? data.map((row, index) => `<div class="leaderboard-row compact"><span>${index + 1}</span><span>${row.key}</span><span>${row.points}</span></div>`).join("") : `<div class="feed-line">No races completed yet.</div>`}
+    </div>
+  </div>`;
+}
+
+function leaderboardTableSafe(cars) {
+  const rows = [...cars].sort((a, b) => a.position - b.position);
+  return `<div class="leaderboard-card">
+    <div class="leaderboard-head">
+      <span>POS</span><span>DRIVER</span><span>TEAM</span><span>GRID</span><span>STOPS</span><span>BEST</span><span>TIME</span><span>PTS</span>
+    </div>
+    <div class="leaderboard-body">
+      ${rows.map((c, i) => {
+        const pos = c.dnf ? "DNF" : i + 1;
+        const delta = c.start - (i + 1);
+        const deltaText = delta > 0 ? `+${delta}` : delta < 0 ? `-${Math.abs(delta)}` : "";
+        return `<div class="leaderboard-row ${c.player ? "player" : ""}">
+          <span class="pos-cell">${pos}${deltaText ? ` <i class="${delta > 0 ? "up" : "down"}">${deltaText}</i>` : ""}</span>
+          <span class="driver-cell"><strong>${c.abbr}</strong><small>${c.name}</small></span>
+          <span class="team-cell">${c.team?.name || playerTeam.name}</span>
+          <span>${c.start}</span>
+          <span>${c.stops}</span>
+          <span>${c.bestLap && c.bestLap < 998 ? c.bestLap.toFixed(3) : "--"}</span>
+          <span>${c.total < 9999 ? c.total.toFixed(3) : c.dnfReason || "--"}</span>
+          <span>${c.dnf ? 0 : pointForPosition(i + 1, c)}</span>
+        </div>`;
+      }).join("")}
+    </div>
+  </div>`;
+}
+
 renderResults = function() {
   const r = state.race;
   const p = r.cars.filter(c => c.player);
   app.innerHTML = cls`<section class="screen">
-    <div class="header-row"><button class="back text-back" onclick="go('menu')">Back</button><h2>Race Results</h2><button class="back text-back" onclick="quickRace(${r.length})">Again</button></div>
+    <div class="header-row"><button class="back text-back" onclick="go('menu')">Back</button><h2>Race Results</h2></div>
     <div class="result-card">
       <div class="result-big">${r.result.grade[0]}</div>
       <h2>${r.result.grade[1]}</h2>
-      <p class="muted">Team result: ${r.result.points} pts - ${r.result.payout} RP earned</p>
-      <table class="result-table">
-        <tr><th>Driver</th><th>Start</th><th>Finish</th></tr>
-        ${p.map(c => `<tr><td>${c.name}</td><td>P${c.start}</td><td>${c.dnf ? "DNF" : "P" + c.position}</td></tr>`).join("")}
-      </table>
+      <p class="muted">${r.mode === "career" ? `Team result: ${r.result.points} pts - ${r.result.payout} RP earned` : `Team result: ${r.result.points} pts`}</p>
+      <div class="result-summary-grid">
+        ${p.map(c => `<div class="result-summary-pill"><b>${c.name}</b><span>P${c.start} → ${c.dnf ? "DNF" : "P" + c.position}</span></div>`).join("")}
+      </div>
     </div>
     <div class="result-card">
       <div class="section-title">Final Standings</div>
-      ${r.cars.map(c => `<div class="feed-line"><strong>${c.dnf ? "DNF" : "P" + c.position} ${c.abbr}</strong> - ${c.name} (${c.team?.name || playerTeam.name})${c.dnf ? " - " + c.dnfReason : ""}</div>`).join("")}
+      ${leaderboardTableSafe(r.cars)}
     </div>
     ${renderInterview(r)}
     ${nextResultAction(r)}
@@ -1868,19 +2098,59 @@ renderResults = function() {
 renderCareer = function() {
   const nextTrack = tracks[state.career.round % tracks.length];
   const expectation = teamExpectation(playerTeam);
+  const tab = state.career.tab || "next";
   app.innerHTML = cls`<section class="screen">
     <div class="header-row"><button class="back text-back" onclick="go('menu')">Back</button><h2>Career</h2><span class="badge">RP ${state.career.credits}</span></div>
-    <div class="career-card"><h2>Next: ${nextTrack.country} - ${nextTrack.name}</h2><p class="muted">${playerTeam.name} expectation: ${expectation.label}.</p></div>
-    <button class="primary-btn race-lap-btn" onclick="startCareerRace()">${state.career.completedSeason ? "Start New Season" : "Next Race"}</button>
-    <button class="secondary-btn race-lap-btn" onclick="go('development')">Buy Upgrades</button>
-    <button class="secondary-btn race-lap-btn" onclick="go('garage')">Driver Market</button>
-    <button class="ghost-btn race-lap-btn" onclick="go('careerSettings')">Career Settings</button>
-    <div class="section-title">Season Calendar</div>
-    <div class="career-card calendar-list">${seasonTrackList()}</div>
-    <div class="section-title">Driver Standings</div>
-    <div class="career-card">${standingsList(sortedDriverStandings())}</div>
-    <div class="section-title">Constructor Standings</div>
-    <div class="career-card">${standingsList(sortedConstructorStandings())}</div>
+    ${careerTabs(tab)}
+    ${tab === "next" ? `
+      <div class="career-hub">
+        <button class="career-hero-card" onclick="startCareerRace()" style="--bg:url('${careerCardImage(0)}')">
+          <span class="career-card-title">Next Race</span>
+          <small>${nextTrack.country} - ${nextTrack.name}</small>
+        </button>
+        <button class="career-side-card" onclick="go('development')" style="--bg:url('${careerCardImage(1)}')">
+          <span>Development</span><small>Build pace, tire life, and pit speed.</small>
+        </button>
+        <button class="career-side-card" onclick="go('garage')" style="--bg:url('${careerCardImage(2)}')">
+          <span>Driver Market</span><small>Sign talent and lock race seats.</small>
+        </button>
+        <button class="career-side-card" onclick="setCareerTab('standings')" style="--bg:url('${careerCardImage(3)}')">
+          <span>Standings</span><small>Track points, gaps and title momentum.</small>
+        </button>
+      </div>
+      <button class="primary-btn race-lap-btn" onclick="startCareerRace()">${state.career.completedSeason ? "Start New Season" : "Start Session"}</button>
+    ` : ""}
+    ${tab === "standings" ? `
+      <div class="section-title">Driver Standings</div>
+      ${standingsTable(sortedDriverStandings(), "DRIVER")}
+      <div class="section-title">Constructor Standings</div>
+      ${standingsTable(sortedConstructorStandings(), "TEAM")}
+    ` : ""}
+    ${tab === "upgrades" ? `
+      <div class="career-card"><h2>${playerTeam.name} Development</h2><p class="muted">Upgrade the car, pit crew and reliability to stay ahead across the season.</p></div>
+      <button class="primary-btn race-lap-btn" onclick="go('development')">Buy Upgrades</button>
+      <div class="section-title">Current Package</div>
+      ${careerUpgrade("Efficient Engine", "engine", "More efficient power unit: better acceleration and lower lap time.")}
+      ${careerUpgrade("New Front Wing", "frontWing", "Sharper aero balance: stronger attack and cleaner pace.")}
+      ${careerUpgrade("Floor Package", "floor", "More downforce and tire stability over a stint.")}
+      ${careerUpgrade("Pit Crew Speed", "pit", "Quicker pit stops and more perfect stops.")}
+    ` : ""}
+    ${tab === "market" ? `
+      <div class="career-card"><h2>Driver Market</h2><p class="muted">Buy or swap drivers with RP. Stronger seats cost more, but they lift your ceiling.</p></div>
+      <button class="primary-btn race-lap-btn" onclick="go('garage')">Open Driver Market</button>
+      <div class="section-title">Current Seats</div>
+      <div class="seat-grid">${playerDrivers.map((d, i) => `<div class="seat-card"><span>Seat ${i + 1}</span><b>${d.name}</b><small>${d.abbr} - ${driverRating(d)}</small></div>`).join("")}</div>
+    ` : ""}
+    ${tab === "settings" ? `
+      <div class="career-card settings-stack">
+        <h3>Career Username</h3>
+        <input class="text-input" type="text" maxlength="24" value="${userProfile.username}" placeholder="Team Principal" oninput="setUsername(this.value)">
+        <p class="muted">Used in your save and profile.</p>
+      </div>
+      <div class="career-card"><h3>Managed Team</h3><p class="muted">${playerTeam.name}: ${playerDrivers[0].name} and ${playerDrivers[1].name}</p></div>
+      <button class="secondary-btn race-lap-btn" onclick="go('careerSettings')">Change Team</button>
+      <button class="ghost-btn race-lap-btn" onclick="go('menu')">Main Menu</button>
+    ` : ""}
   </section>`;
 }
 
@@ -1918,19 +2188,27 @@ renderSettings = function() {
   app.innerHTML = cls`<section class="screen">
     <div class="header-row"><button class="back text-back" onclick="go('menu')">Back</button><h2>Settings</h2></div>
     <div class="career-card settings-stack">
-      <h3>Username</h3>
+      <h3>Name</h3>
       <input class="text-input" type="text" maxlength="24" value="${userProfile.username}" placeholder="Team Principal" oninput="setUsername(this.value)">
       <p class="muted">Used for your save profile.</p>
     </div>
-    <div class="career-card settings-stack">
-      <h3>Theme</h3>
-      <div class="segment-row">
-        <button class="segment-btn ${userProfile.theme === "dark" ? "active" : ""}" onclick="setTheme('dark')">Dark Mode</button>
-        <button class="segment-btn ${userProfile.theme === "light" ? "active" : ""}" onclick="setTheme('light')">Light Mode</button>
-      </div>
-    </div>
+    <button class="secondary-btn race-lap-btn" onclick="resetProgress()">Reset Progress</button>
     <button class="primary-btn race-lap-btn" onclick="go('menu')">Done</button>
   </section>`;
+}
+
+function resetProgress() {
+  const ok = window.confirm("Reset all Apex Strategy progress? This cannot be undone.");
+  if (!ok) return;
+  const keys = Object.keys(localStorage).filter(key => key.startsWith("apexStrategy"));
+  keys.forEach(key => localStorage.removeItem(key));
+  localStorage.removeItem("apexStrategyTeam");
+  localStorage.removeItem("apexStrategyCareer");
+  localStorage.removeItem("apexStrategyProfile");
+  if (location.hash) {
+    history.replaceState(null, "", `${location.pathname}${location.search}`);
+  }
+  location.reload();
 }
 
 renderCareerSettings = function() {
@@ -1949,11 +2227,8 @@ function setUsername(name) {
   saveProfile();
 }
 
-function setTheme(theme) {
-  userProfile.theme = theme === "light" ? "light" : "dark";
-  applyTheme();
-  saveProfile();
-  render();
+function setTheme() {
+  document.body.classList.remove("light-theme");
 }
 
 pitModal = function(num) {
@@ -1983,11 +2258,13 @@ window.randomTrack = randomTrack;
 window.setTrack = setTrack;
 window.setGrandPrixTeam = setGrandPrixTeam;
 window.setLaps = setLaps;
+window.setSurface = setSurface;
 window.setSetup = setSetup;
 window.runQualifying = runQualifying;
 window.startRace = startRace;
 window.setCommand = setCommand;
 window.setTeamOrder = setTeamOrder;
+window.setBackUpDriver = setBackUpDriver;
 window.openPit = openPit;
 window.closePit = closePit;
 window.queuePit = queuePit;
@@ -2002,11 +2279,13 @@ window.acceptSeasonContract = acceptSeasonContract;
 window.promoteAcademyDriver = promoteAcademyDriver;
 window.buyDriver = buyDriver;
 window.assignDriver = assignDriver;
+window.setCareerTab = setCareerTab;
 window.setUsername = setUsername;
-window.setTheme = setTheme;
+window.resetProgress = resetProgress;
 window.state = state;
 window.tracks = tracks;
 window.pointForPosition = pointForPosition;
 window.gradeRace = gradeRace;
 
+pushAppHistory(state.view, true);
 render();
