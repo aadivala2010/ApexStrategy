@@ -3346,6 +3346,11 @@ body.light-theme .screen:not(.ea-home):not(.race-screen) .text-input {
   color: #fff !important;
 }
 
+/* Keep qualifying/result table headers readable on light header rows */
+.phone-shell > .screen:not(.ea-home):not(.race-screen) .tower-row.tower-head :is(b, span) {
+  color: #08090c !important;
+}
+
 /* Career / Setup reference-style surfaces */
 .career-tabs {
   display: grid;
