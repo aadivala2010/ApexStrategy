@@ -1937,9 +1937,47 @@ body {
   z-index: 2;
 }
 
+.console-nav {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  gap: clamp(12px, 3vw, 24px);
+  align-items: center;
+  min-height: 38px;
+  padding: 0 0 8px;
+  border-bottom: 2px solid rgba(232,0,45,.78);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.console-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.console-nav button {
+  flex: 0 0 auto;
+  padding: 7px 9px;
+  border-radius: 5px;
+  background: transparent;
+  border: 0;
+  color: rgba(255,255,255,.82);
+  font-size: clamp(12px, 3.2vw, 16px);
+  font-weight: 900;
+  letter-spacing: .04em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.console-nav button.active,
+.console-nav button:not(:disabled):hover {
+  background: #f4f5f8;
+  color: #050609;
+  box-shadow: 0 10px 24px rgba(255,255,255,.12);
+}
+
 .home-status {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 10px;
   align-items: center;
   padding: 6px 0 4px;
@@ -1974,13 +2012,19 @@ body {
 
 .console-home {
   display: grid;
-  grid-template-rows: auto minmax(120px, .8fr) auto auto;
+  grid-template-rows: auto auto 1fr auto 1fr;
   gap: 14px;
   padding: 16px;
+  min-height: 100dvh;
 }
 
 .console-home .title-block {
-  align-self: end;
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 50dvh;
+  transform: translateY(-50%);
+  align-self: center;
   padding: 0;
   z-index: 2;
 }
@@ -1997,12 +2041,14 @@ body {
   z-index: 2;
   display: grid;
   gap: 12px;
-  min-height: 172px;
+  align-self: end;
+  margin-top: calc(50dvh + 106px);
+  min-height: 190px;
   padding: 16px;
   border-radius: 13px;
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgba(5,6,10,.32), rgba(5,6,10,.86) 68%),
+    linear-gradient(180deg, rgba(34,38,48,.96), rgba(13,16,24,.98)),
     radial-gradient(circle at 20% 12%, rgba(0,210,255,.22), transparent 30%),
     linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.045)),
     var(--console-card);
@@ -2013,15 +2059,14 @@ body {
 .home-feature::before {
   content: "";
   position: absolute;
-  inset: 18px 10px auto auto;
-  width: 46%;
-  height: 80px;
-  background:
-    linear-gradient(120deg, transparent 0 18%, rgba(255,255,255,.8) 18% 30%, transparent 30%),
-    linear-gradient(90deg, var(--console-red), #ffffff 52%, var(--console-cyan));
-  clip-path: polygon(0 58%, 18% 28%, 62% 22%, 100% 50%, 74% 80%, 18% 84%);
-  opacity: .42;
-  filter: drop-shadow(0 12px 26px rgba(0,210,255,.25));
+  inset: 0 auto 0 0;
+  width: 47%;
+  height: auto;
+  background: linear-gradient(90deg, rgba(0,0,0,.52), rgba(0,0,0,.22), transparent);
+  clip-path: none;
+  opacity: .9;
+  z-index: 2;
+  filter: none;
 }
 
 .home-feature::after {
@@ -2035,9 +2080,11 @@ body {
 }
 
 .feature-kicker {
+  position: relative;
+  z-index: 3;
   display: inline-block;
   margin-bottom: 8px;
-  color: var(--console-cyan);
+  color: var(--console-red);
   font-size: 10px;
   font-weight: 900;
   letter-spacing: .18em;
@@ -2045,9 +2092,11 @@ body {
 }
 
 .home-feature h2 {
-  max-width: 78%;
+  position: relative;
+  z-index: 3;
+  max-width: min(44%, 230px);
   color: #fff;
-  font-size: 24px;
+  font-size: 32px;
   line-height: .95;
   text-transform: uppercase;
   font-style: italic;
@@ -2055,13 +2104,45 @@ body {
 }
 
 .home-feature p {
-  max-width: 72%;
+  position: relative;
+  z-index: 3;
+  max-width: min(43%, 230px);
   margin-top: 8px;
-  color: rgba(255,255,255,.7);
+  color: rgba(255,255,255,.78);
   font-family: Barlow, system-ui, sans-serif;
   font-size: 12px;
   font-weight: 700;
   line-height: 1.35;
+}
+
+.feature-car {
+  position: absolute;
+  inset: 14px 12px 14px 43%;
+  z-index: 1;
+  border-radius: 0 9px 9px 0;
+  overflow: hidden;
+  clip-path: polygon(14% 0, 100% 0, 100% 100%, 0 100%);
+  background: #111722;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.16);
+}
+
+.feature-car img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: 48% 53%;
+  filter: saturate(1.12) contrast(1.05);
+}
+
+.feature-car::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(13,16,24,.86), rgba(13,16,24,.12) 34%, rgba(0,0,0,.08)),
+    linear-gradient(180deg, rgba(255,255,255,.14), transparent 45%);
+  pointer-events: none;
 }
 
 .feature-meta {
@@ -2069,6 +2150,8 @@ body {
   flex-wrap: wrap;
   gap: 6px;
   align-self: end;
+  position: relative;
+  z-index: 3;
 }
 
 .feature-meta span {
@@ -2091,6 +2174,18 @@ body {
   background: transparent;
   box-shadow: none;
   gap: 8px;
+  grid-template-columns: 1fr;
+  align-self: start;
+}
+
+.home-feature + .menu-grid {
+  margin-top: 0;
+}
+
+@media (max-width: 899px) {
+  .home-feature {
+    margin-top: calc(50dvh + 106px);
+  }
 }
 
 .menu-tile,
@@ -2103,7 +2198,7 @@ body {
 
 .menu-tile {
   position: relative;
-  min-height: 64px;
+  min-height: 72px;
   display: grid;
   justify-items: start;
   align-content: center;
@@ -2113,16 +2208,7 @@ body {
 }
 
 .menu-tile::after {
-  content: "";
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  width: 28px;
-  height: 12px;
-  translate: 0 -50%;
-  background: currentColor;
-  opacity: .55;
-  clip-path: polygon(0 0, 72% 0, 100% 50%, 72% 100%, 0 100%, 20% 50%);
+  content: none;
 }
 
 .menu-tile span,
@@ -2151,7 +2237,7 @@ body {
 }
 
 .career-btn {
-  background: linear-gradient(180deg, #ffffff, #dfe3ea);
+  background: linear-gradient(180deg, #ffffff, #e6e9ef);
   color: #07080b;
   border: 1px solid rgba(255,255,255,.78);
   box-shadow: inset 0 1px 0 #fff, 0 18px 42px rgba(255,255,255,.13);
@@ -2471,12 +2557,41 @@ body.light-theme .feature-meta span {
   color: #07101c;
 }
 
+body.light-theme .console-nav {
+  border-bottom-color: rgba(232,0,45,.62);
+}
+
+body.light-theme .console-nav button {
+  color: #07101c;
+}
+
+body.light-theme .console-nav button.active,
+body.light-theme .console-nav button:not(:disabled):hover {
+  background: #07101c;
+  color: #fff;
+}
+
 body.light-theme .home-feature {
   background:
-    linear-gradient(90deg, rgba(255,255,255,.58), rgba(255,255,255,.9) 68%),
+    linear-gradient(180deg, rgba(255,255,255,.98), rgba(235,241,248,.96)),
     radial-gradient(circle at 20% 12%, rgba(0,126,160,.14), transparent 30%),
     linear-gradient(145deg, rgba(255,255,255,.92), rgba(232,238,246,.94));
   border-color: rgba(8,17,31,.16);
+}
+
+body.light-theme .home-feature::before {
+  background: linear-gradient(90deg, rgba(255,255,255,.92), rgba(255,255,255,.68), transparent);
+}
+
+body.light-theme .home-feature h2,
+body.light-theme .home-feature p {
+  color: #07101c;
+}
+
+body.light-theme .feature-car::after {
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.9), rgba(255,255,255,.16) 34%, rgba(0,0,0,.04)),
+    linear-gradient(180deg, rgba(255,255,255,.12), transparent 45%);
 }
 
 body.light-theme .feature-meta span {
@@ -2548,33 +2663,52 @@ body.light-theme .feed {
   .console-home {
     min-height: 100vh;
     grid-template-columns: minmax(460px, 1fr) minmax(360px, 520px);
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 1fr);
     column-gap: clamp(46px, 8vw, 150px);
     padding: 32px clamp(42px, 7vw, 96px);
   }
 
+  .console-home .console-nav {
+    position: absolute;
+    top: 32px;
+    left: clamp(42px, 7vw, 96px);
+    right: clamp(42px, 7vw, 96px);
+  }
+
   .console-home .home-status {
-    grid-column: 1 / -1;
+    position: absolute;
+    top: 82px;
+    right: clamp(42px, 7vw, 96px);
+    left: auto;
   }
 
   .console-home .title-block {
     grid-column: 1;
-    grid-row: 2;
+    grid-row: 1 / -1;
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
     transform: translateX(0);
+    align-self: center;
   }
 
   .console-home .home-feature {
-    grid-column: 1;
-    grid-row: 3;
-    width: min(760px, 100%);
+    grid-column: 2;
+    grid-row: 2;
+    width: 100%;
+    align-self: end;
+    margin-top: 0;
   }
 
   .console-home .menu-grid {
     grid-column: 2;
-    grid-row: 2 / span 2;
-    align-self: center;
+    grid-row: 3;
+    align-self: start;
     transform: none;
     max-width: 520px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
   }
 
   .console-home h1 {
@@ -2582,16 +2716,17 @@ body.light-theme .feed {
   }
 
   .menu-tile {
-    min-height: 82px;
-    padding: 18px 22px;
+    min-height: 118px;
+    padding: 16px;
+    align-content: center;
   }
 
   .menu-tile span {
-    font-size: 26px;
+    font-size: 24px;
   }
 
   .home-feature h2 {
-    font-size: 34px;
+    font-size: 42px;
   }
 
   .home-feature p {
@@ -2625,20 +2760,99 @@ body.light-theme .feed {
 
 @media (max-width: 520px) {
   .console-home {
-    grid-template-rows: auto minmax(160px, .8fr) auto auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    gap: 12px;
+    padding: 14px;
+    overflow-x: hidden;
+  }
+
+  .console-nav {
+    gap: 4px;
+    justify-content: space-between;
+    min-height: 38px;
+    padding-bottom: 8px;
+  }
+
+  .console-nav button {
+    padding: 8px 7px;
+    font-size: clamp(10px, 2.8vw, 12px);
+    letter-spacing: .03em;
+  }
+
+  .home-status {
+    min-height: 42px;
+    padding: 4px 0 0;
+  }
+
+  .rp-stack span {
+    font-size: 8px;
+  }
+
+  .rp-stack b {
+    font-size: 13px;
+  }
+
+  .console-home .title-block {
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
+    transform: none;
+    margin: clamp(52px, 12vh, 92px) 0 clamp(24px, 5vh, 42px);
+    width: 100%;
+  }
+
+  .console-home h1 {
+    font-size: clamp(56px, 18vw, 78px);
+    line-height: .8;
   }
 
   .home-feature {
-    min-height: 154px;
+    min-height: 146px;
+    margin-top: 0;
+    padding: 14px;
+    flex: 0 0 auto;
+  }
+
+  .feature-car {
+    inset: 14px 9px 14px 49%;
   }
 
   .home-feature h2 {
-    max-width: 84%;
-    font-size: 22px;
+    max-width: min(50%, 190px);
+    font-size: clamp(20px, 6vw, 24px);
+  }
+
+  .home-feature p {
+    max-width: min(48%, 190px);
   }
 
   .home-feature p {
     display: none;
+  }
+
+  .menu-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 2px;
+    padding-bottom: 18px;
+  }
+
+  .menu-tile {
+    min-height: 62px;
+    padding: 12px 14px;
+  }
+
+  .menu-tile span {
+    font-size: 19px;
+  }
+
+  .menu-tile small {
+    font-size: 10px;
+    line-height: 1.15;
   }
 
   .commands {

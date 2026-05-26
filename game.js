@@ -1576,8 +1576,13 @@ renderMenu = function() {
   app.innerHTML = cls`
     <section class="screen hero console-home">
       ${speedLines()}
+      <nav class="console-nav">
+        <button class="active" onclick="go('menu')">Home</button>
+        <button onclick="go('career')">Career</button>
+        <button onclick="quickRace(10, 'grandPrix')">Grand Prix</button>
+        <button onclick="go('settings')">Settings</button>
+      </nav>
       <div class="home-status">
-        <div class="profile-stack"><span>PRINCIPAL</span><b>${userProfile.username}</b></div>
         <div class="rp-stack"><span>RESOURCE POINTS</span><b>RP ${state.career.credits}</b></div>
       </div>
       <div class="title-block">
@@ -1586,15 +1591,11 @@ renderMenu = function() {
       </div>
       <div class="home-feature">
         <div>
-          <span class="feature-kicker">Season Control</span>
-          <h2>Race strategy, team politics, development calls.</h2>
-          <p>Manage two drivers through compressed Grand Prix battles with tire rules, pit gambles, interviews, standings and contracts.</p>
+          <span class="feature-kicker">Featured Mode</span>
+          <h2>New Career</h2>
+          <p>Lead a real team through the season calendar, manage development, handle interviews, and fight for the WDC and WCC.</p>
         </div>
-        <div class="feature-meta">
-          <span>10 / 20 LAP RACES</span>
-          <span>LIVE WEATHER</span>
-          <span>TEAM ORDERS</span>
-        </div>
+        <div class="feature-car" aria-hidden="true"><img src="assets/apex-2026-car.webp" alt=""></div>
       </div>
       <div class="menu-grid">
         <button class="primary-btn career-btn menu-tile" onclick="go('career')"><span>Career</span><small>Continue the championship</small></button>
