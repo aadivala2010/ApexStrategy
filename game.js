@@ -541,7 +541,7 @@ function renderSetup() {
 function trackCard(track, laps) {
   return cls`<div class="track-card">
     <div class="track-head">
-      <div><div class="track-name">${track.name}</div><div class="track-country">${track.country}</div></div>
+      <div><div class="track-name">${track.name}</div></div>
       ${trackSvg(track.seed)}
     </div>
     <div class="stat-grid">
@@ -1591,7 +1591,7 @@ function standingsList(rows, emptyText = "No races completed yet.") {
 function seasonTrackList() {
   return tracks.map((track, index) => {
     const stateClass = index < state.career.round ? "done" : index === state.career.round ? "current" : "";
-    return `<div class="calendar-row ${stateClass}"><b>${index + 1}</b><span>${track.country} - ${track.name}</span></div>`;
+    return `<div class="calendar-row ${stateClass}"><b>${index + 1}</b><span>${track.name}</span></div>`;
   }).join("");
 }
 
@@ -1855,8 +1855,7 @@ trackCard = function(track, laps) {
       url('${photo}')"></div>
     <div class="track-venue-copy">
       <div class="venue-badges"><span class="venue-badge laps">${laps} LAPS</span></div>
-      <div class="track-name">${track.country.toUpperCase()} ${track.name.toUpperCase()}</div>
-      <div class="track-country">${track.country}</div>
+      <div class="track-name">${track.name.toUpperCase()}</div>
       <div class="track-venue-body">
         <div class="venue-stats">
           <div class="venue-stat"><span>Avg Speed</span><b>${track.speed} km/h</b></div>
@@ -2000,7 +1999,7 @@ function nextRaceCard(track, expectation) {
   return `<div class="next-race-card">
     <div class="next-race-copy">
       <span class="eyebrow">Next Race</span>
-      <h2>${track.country} Grand Prix</h2>
+      <h2>${track.name} Grand Prix</h2>
       <p>${track.name}. ${playerTeam.name} expectation: ${expectation.label}.</p>
       <div class="next-race-meta">
         <span>${track.speed} km/h avg</span>
@@ -2106,7 +2105,7 @@ renderCareer = function() {
       <div class="career-hub">
         <button class="career-hero-card" onclick="startCareerRace()" style="--bg:url('${careerCardImage(0)}')">
           <span class="career-card-title">Next Race</span>
-          <small>${nextTrack.country} - ${nextTrack.name}</small>
+          <small>${nextTrack.name}</small>
         </button>
         <button class="career-side-card" onclick="go('development')" style="--bg:url('${careerCardImage(1)}')">
           <span>Development</span><small>Build pace, tire life, and pit speed.</small>
